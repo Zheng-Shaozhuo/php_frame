@@ -22,7 +22,7 @@ class frame
 
     public static function runAction($control, $action)
     {
-        $path = ROOT . '/' . MODULE . '/control/' . $control . 'Controller.php';
+        $path = str_replace('\\', DIRECTORY_SEPARATOR, ROOT . '/' . MODULE . '/control/' . $control . 'Controller.php');
         if (is_file($path))
         {
             include $path;

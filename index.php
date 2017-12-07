@@ -5,9 +5,9 @@
  * Date: 2017/9/1
  * Time: 0:27
  */
-define('ROOT', str_replace('\\', '/', __DIR__) . '/');
-define('CORE', ROOT . 'core/');
-define('COMMON', ROOT . 'common/');
+define('ROOT', str_replace('\\', DIRECTORY_SEPARATOR, __DIR__) . DIRECTORY_SEPARATOR);
+define('CORE', ROOT . 'core' . DIRECTORY_SEPARATOR);
+define('COMMON', ROOT . 'common' . DIRECTORY_SEPARATOR);
 define('MODULE', 'app');
 
 define('DEBUG', true);
