@@ -7,29 +7,28 @@
  */
 namespace core\lib;
 
-use core\common\config;
+use core\common\Config;
+use core\common\Functions;
 
-class Db
+abstract class Db
 {
-    protected $msg = array();       /* 提示消息数组 */
-    protected $tableName = '';      /* 表名, 自动获取 */
-    protected $filedList = array(); /* 表字段结构, 自动获取 */
-    protected $dbcfgname = null;    /* 配置文件名 */
-
-    private $_charset;
-    private $_dsn;
-    private $_host;
-    private $_user;
-    private $_pass;
-    private $_port;
-    private $_dbname;
-    private $_table;
-    private $_tableprefix;
-    private $_dbInstance;
-
+    protected $_charset;
+    protected $_dsn;
+    protected $_host;
+    protected $_user;
+    protected $_pass;
+    protected $_port;
+    protected $_dbname;
+    protected $_table;
+    protected $_fields;
+    protected $_tableprefix;
+    protected $_lastquery;
     protected $_error;
-    protected $data         = array();  // 数据信息
-    protected $options      = array();  // 查询表达式参数
+    protected $_errno;
+
+    protected static $_dbInstance = null;
+    protected $_datas       = array();  // 数据信息
+    protected $_options     = array();  // 查询表达式参数
     protected $_validate    = array();  // 自动验证定义
     protected $_auto        = array();  // 自动完成定义
     protected $_map         = array();  // 字段映射定义
@@ -42,56 +41,91 @@ class Db
     /*
      * 初始化函数
      */
-    public function __construct($host, $user, $pass, $dbname, $port = 3306, $charset = 'uft8', $prefix = '') {
-        if (!isset($host) || !isset($user) || !isset($pass) || !isset($dbname)) {
-            $config = \core\common\config::RC('db', true);
-            $this->_charset     = $config['charset'];
-            $this->_host        = $config['hostname'];
-            $this->_user        = $config['username'];
-            $this->_pass        = $config['password'];
-            $this->_dbname      = $config['database'];
-            $this->_port        = $config['port'];
-            $this->_tableprefix = $config['prefix'];
-        } else {
-            $this->_charset     = $charset;
-            $this->_host        = $host;
-            $this->_user        = $user;
-            $this->_pass        = $pass;
-            $this->_dbname      = $dbname;
-            $this->_port        = $port;
-            $this->_tableprefix = $prefix;
+    public function __construct($host = null, $user = null, $pass = null, $dbname = null, $port = 3306, $charset = 'uft8', $prefix = '') {
+        if (!isset(self::$_dbInstance)) {
+            if (!isset($host) || !isset($user) || !isset($pass) || !isset($dbname)) {
+                $config = Config::RC('db', true);
+                $this->_charset     = $config['charset'];
+                $this->_host        = $config['hostname'];
+                $this->_user        = $config['username'];
+                $this->_pass        = $config['password'];
+                $this->_dbname      = $config['database'];
+                $this->_port        = $config['hostport'];
+                $this->_tableprefix = $config['prefix'];
+            } else {
+                $this->_charset     = $charset;
+                $this->_host        = $host;
+                $this->_user        = $user;
+                $this->_pass        = $pass;
+                $this->_dbname      = $dbname;
+                $this->_port        = $port;
+                $this->_tableprefix = $prefix;
+            }
+            $this->_dsn = 'mysql:host=' . $this->_host . ';dbname=' . $this->_dbname;
         }
-        $this->_dsn = 'mysql:host=' . $this->_host . ';dbname=' . $this->_dbname;
+    }
 
-        $_dbObj = new \mysqli($this->_host, $this->_user, $this->_pass, $this->_dbname, $this->_port);
-        if ($_dbObj->connect_errno) {
-            $this->_error = $_dbObj->connect_error;
-            return false;
-        } else {
-            $this->_dbInstance = $_dbObj;
-            return $this;
-        }
+    /*
+     * 获取数据库链接
+     */
+    protected function getConn() {
+        /* 子类实现 */
     }
 
     /*
      * 获取当前数据表名
      */
-    public function getTableName() {
+    public function getTable() {
         return $this->_table;
+    }
+
+    /*
+     * 选择当前表
+     */
+    public function table($table) {
+        $this->_table = $table;
     }
 
     /*
      * 获取当前数据库名
      */
-    public function getDbName() {
+    public function getDatabase() {
         return $this->_dbname;
     }
 
+    /*
+     * 选择数据库
+     */
+    public function database($dbname) {
+        /* 子类实现 */
+    }
+
+    /*
+     * 获取查询字段
+     */
+    public function getField() {
+        return isset($this->_fields) ? $this->_fields : '*';
+    }
+
+    /*
+     * 设置查询字段
+     */
+    public function field($fields = '*') {
+        $this->_fields = $fields;
+    }
+    
     /*
      * 返回错误信息
      */
     public function error() {
         return $this->_error;
+    }
+
+    /*
+     * 返回错误编号
+     */
+    public function errno() {
+        return $this->_errno;
     }
 
     /*
@@ -104,28 +138,28 @@ class Db
      * 设置数据对象值
      */
     public function __set($name, $value) {
-        $this->data[$name] = $value;
+        $this->_datas[$name] = $value;
     }
 
     /*
      * 获取数据对象值
      */
     public function __get($name) {
-        return isset($this->data[$name]) ? $this->data[$name] : null;
+        return isset($this->_datas[$name]) ? $this->_datas[$name] : null;
     }
 
     /*
      * 检测数据对象值
      */
     public function __isset($name) {
-        return isset($this->data[$name]);
+        return isset($this->_datas[$name]);
     }
 
     /*
      * 销毁数据对象值
      */
     public function __unset($name) {
-        unset($this->data[$name]);
+        unset($this->_datas[$name]);
     }
 
     /*
@@ -136,46 +170,10 @@ class Db
     }
 
     /*
-     * 选择数据库
-     */
-    public function db_select($dbname) {
-        $db_select = mysqli_select_db($this->_dbInstance, $dbname);
-        if ($db_select) {
-            $this->_dbname = $dbname;
-            $_dbObj = new \mysqli($this->_host, $this->_user, $this->_pass, $this->_dbname);
-            if ($_dbObj->connect_errno) {
-                $this->_error = $_dbObj->connect_error;
-                return false;
-            } else {
-                $this->_dbInstance = $_dbObj;
-                return $this;
-            }
-        } else {
-            $this->_error = mysqli_error($this->_dbInstance);
-            return false;
-        }
-    }
-
-    /*
      * 数据库用户更换
      */
     public function db_changeUser($user, $pass) {
-        $db_change_user = mysqli_change_user($this->_dbInstance, $user, $pass, $this->_dbname);
-        if ($db_change_user) {
-            $this->_user = $user;
-            $this->_pass = $pass;
-            $_dbObj = new \mysqli($this->_host, $this->_user, $this->_pass, $this->_dbname);
-            if ($_dbObj->connect_errno) {
-                $this->_error = $_dbObj->connect_error;
-                return false;
-            } else {
-                $this->_dbInstance = $_dbObj;
-                return $this;
-            }
-        } else {
-            $this->_error = mysqli_error($this->_dbInstance);
-            return false;
-        }
+        /* 子类实现 */
     }
 
     /*
@@ -183,71 +181,29 @@ class Db
      */
     public function db_getTables() {
         $sql = 'show tables';
-        $db_tables = mysqli_query($this->_dbInstance, $sql);
-        if ($db_tables) {
-            $num_rows = $db_tables->num_rows;
-            $msg_tables = array('count' => $num_rows, 'tables' => array());
-
-            for ($i = 0; $i < $num_rows; $i++) {
-                $row = $db_tables->fetch_assoc();
-                $key = 'Tables_in_in' . $this->_dbname;
-                array_push($msg_tables['tables'], $row['$key']);
-            }
-            mysqli_free_result($db_tables);
-            return $msg_tables;
-
-        } else {
-            mysqli_free_result($db_tables);
-            return false;
-        }
+        $rows = $this->query($sql);
+        return $rows;
     }
 
     /*
      * 获取指定表中所有信息
      */
-    public function db_selectTable($table) {
-        $sql = 'select * from '. $table;
-        $db_table = mysqli_query($this->_dbInstance, $sql);
-        if ($db_table) {
-            $this->_table = $table;
-            $msg_table = self::query_handle($db_table);
-            mysqli_free_result($db_table);
-            return $msg_table;
-        } else {
-            mysqli_free_result($db_table);
-            return false;
-        }
+    public function db_getTableDesc($table) {
+        $sql = "desc $table";
+        $rows = $this->query($sql);
+        return $rows;
     }
 
     /*
      * 获取指定表的字段详情
      */
     public function db_selectTableFields($table) {
-        $sql = 'show fields from ' . $table;
-        $db_fields = mysqli_query($this->_dbInstance, $sql);
-        if ($db_fields) {
-            $this->_table = $table;
-            $msg_fields = self::query_handle($db_fields);
-            mysqli_free_result($db_fields);
-            return $msg_fields;
-        } else {
-            mysqli_free_result($db_fields);
-            return false;
+        $res = $this->db_getTableDesc($table);
+        $fields = null;
+        if (isset($res) && is_array($res)) {
+            $fields = implode(',', Functions::vg_array_column($res, 'Field'));
         }
-    }
-
-    /*
-     * 获取数据表中指定字段信息
-     */
-    public function getField($field) {
-        $fields = self::param_handle($field);
-        $count = count($fields);
-        for ($i = 0; $i < $count; $i++) {
-            $index = $fields[$i];
-            $sql = 'select ' . $index . ' from ' . $this->_table;
-            $res = mysqli_query($this->_dbInstance, $sql);
-            $msg_fields[$index] = self::query_handle($res);
-        }
+        return $fields;
     }
 
     /*
@@ -262,19 +218,6 @@ class Db
             return false;
         }
         return $params;
-    }
-
-    /*
-     * mysqli_query 结果处理
-     */
-    protected function query_handle($obj) {
-        $res = array();
-        for ($i = 0; $obj->num_rows; $i++) {
-            $row = $obj->fetch_assoc();
-            array_push($res, $row);
-        }
-
-        return $res;
     }
 
     /*
@@ -307,7 +250,7 @@ class Db
      * 查询表达式$option处理函数
      */
     protected function option() {
-        $options = $this->options;
+        $options = $this->_options;
         $option = '';
         if (isset($options['where'])) {
             $option .= 'where ' . $options['where'] . ' ';
@@ -426,14 +369,18 @@ class Db
 
     /*
      * SQL查询
+     * $type all、single、count
      */
     public function query($sql) {
-        if (is_string($sql)) {
-            $db_query = mysqli_query($this->_dbInstance, $sql);
-            return $db_query;
-        } else {
-            return null;
-        }
+        /* 子类实现 */
+        return null;
+    }
+
+    /*
+     * SQL执行
+     */
+    public function exec($sql) {
+        /* 子类实现 */
     }
 
     /*
@@ -449,6 +396,6 @@ class Db
     }
 
     function __destruct() {
-        mysqli_close($this->_dbInstance);
+//        mysqli_close($this->_dbInstance);
     }
 }

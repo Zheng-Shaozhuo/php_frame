@@ -7,7 +7,7 @@
  */
 namespace core\common;
 
-class config{
+class Config{
     private function __construct()
     {
     }
@@ -33,8 +33,7 @@ class config{
         $path = ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . "$name.config.php";
         if (is_file($path)) {
             return include_once $path;
-        }
-        else {
+        } else {
             exit("$name.config.php file not found, Please check your input, Thanks.");
         }
     }

@@ -43,8 +43,13 @@ class frame
             return true;
         }
 
-        $class = str_replace('\\', '/', $class);
         $path = ROOT . $class . '.php';
+        $class = str_replace('\\', '/', $class);
+        if (false != strpos($class, 'core') >= 0) {
+            if (false != strpos($class, 'common')) {
+                $path = ROOT . $class . '.inc.php';
+            }
+        }
 
         if (is_file($path)) {
             include $path;
