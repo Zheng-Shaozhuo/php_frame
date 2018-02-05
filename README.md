@@ -1,3 +1,3 @@
-# php_frame
-This is an Application Development Framework
+# VgamblerPHP
+VgamblerPHP is an Application Development Framework
 
