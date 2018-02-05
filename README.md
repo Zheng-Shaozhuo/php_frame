@@ -1,2 +1,3 @@
 # php_frame
-php frame diy
+This is an Application Development Framework
+
