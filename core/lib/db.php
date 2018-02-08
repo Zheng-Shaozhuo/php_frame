@@ -76,7 +76,7 @@ abstract class Db
      * 获取当前数据表名
      */
     public function getTable() {
-        return $this->_table;
+        return $this->getFullTable($this->_table);
     }
 
     /*
@@ -84,6 +84,13 @@ abstract class Db
      */
     public function table($table) {
         $this->_table = $table;
+    }
+
+    /*
+     * 获取完整表名
+     */
+    private function getFullTable($table) {
+        return isset($this->_tableprefix) ? $table : $this->_tableprefix . '_' . $table;
     }
 
     /*
@@ -181,8 +188,7 @@ abstract class Db
      */
     public function db_getTables() {
         $sql = 'show tables';
-        $rows = $this->query($sql);
-        return $rows;
+        return $this->query($sql);
     }
 
     /*
@@ -190,60 +196,19 @@ abstract class Db
      */
     public function db_getTableDesc($table) {
         $sql = "desc $table";
-        $rows = $this->query($sql);
-        return $rows;
+        return $this->query($sql);
     }
 
     /*
      * 获取指定表的字段详情
      */
     public function db_selectTableFields($table) {
-        $res = $this->db_getTableDesc($table);
+        $res = $this->db_getTableDesc($this->getFullTable($table));
         $fields = null;
         if (isset($res) && is_array($res)) {
             $fields = implode(',', Functions::vg_array_column($res, 'Field'));
         }
         return $fields;
-    }
-
-    /*
-     * 传入参数处理
-     */
-    protected function param_handle($param) {
-        if (is_string($param) && !empty($param)) {
-            $params = explode(',', $param);
-        } elseif (is_array($param) && !empty($param)) {
-            $params = $param;
-        } else {
-            return false;
-        }
-        return $params;
-    }
-
-    /*
-     * 查询表达式参数处理函数
-     */
-    public function options_handle($param) {
-        if (is_numeric($param)) {
-            $option = $param;
-        } elseif (is_string($param) && !empty($param) && !is_numeric($param)) {
-            $params = explode(',', $param);
-            $count = count($params);
-            $option = implode(' and ', $params);
-        } elseif (is_array($param) && !empty($params)) {
-            $params = $param;
-            $count = count($params);
-            $arr = array();
-
-            foreach ($params as $key => $value) {
-                $tip = "$key = $value";
-                array_push($arr, $tip);
-            }
-            $option = implode(' and ', $arr);
-        } else {
-            return false;
-        }
-        return $option;
     }
 
     /*
@@ -261,25 +226,31 @@ abstract class Db
         if (isset($options['limit'])) {
             $option .= 'limit ' . $options['limit'];
         }
+        if (empty($this->_datas['join'])) {
+            $this->_datas['join'] = '';
+        }
         return $option;
     }
 
     /*
-     * 根据查询表达式查询数据
+     * 传入参数处理
      */
-    public function find() {
-        $option = self::option();
-        $sql = 'select * from ' . $this->_table . ' ' . $option;
-        $db_find = mysqli_query($this->_dbInstance, $sql);
-        $msg = self::query_handle($db_find);
-        return $msg;
+    protected function param_handle($param) {
+        if (is_string($param) && !empty($param)) {
+            $params = explode(',', $param);
+        } elseif (is_array($param) && !empty($param)) {
+            $params = $param;
+        } else {
+            return false;
+        }
+        return $params;
     }
 
     /*
      * 表达式查询where处理函数
      */
     public function where($where) {
-        $this->options['where'] = self::options_handle($where);
+        $this->_options['where'] = self::options_handle($where);
         return $this;
     }
 
@@ -287,7 +258,7 @@ abstract class Db
      * 表达式查询limit处理函数
      */
     public function limit($limit) {
-        $this->options['limit'] = self::options_handle($limit);
+        $this->_options['limit'] = self::options_handle($limit);
         return $this;
     }
 
@@ -295,9 +266,75 @@ abstract class Db
      * 表达式查询order处理函数
      */
     public function order($order, $type = 'desc') {
-        $this->options['order'] = $order;
-        $this->options['order_type'] = $type;
+        $this->_options['order'] = $order;
+        $this->_options['order_type'] = $type;
         return $this;
+    }
+
+    /*
+     * 表达式查询order处理函数
+     */
+    public function join($table, $on = array(), $type = 'left') {
+        $join_table = 'vg_' . $this->getFullTable($table);
+        $_full_table = $this->getFullTable($this->_table);
+        if (is_array($on)) {
+            $arrOn = array();
+            foreach ($on as $k => $v) {
+                array_push($arrOn, $_full_table . ".$k = $join_table.$v");
+            }
+            $ons = implode(' and ', $arrOn);
+        } elseif (is_string($on)) {
+            $ons = $on;
+        } else {
+            $ons = '1 = 1';
+        }
+        $joins = "$type $join_table on $ons";
+        $this->_datas['join'] = isset($this->_datas['join']) ? $this->_datas['join'] . " $joins" : $_full_table . " $joins";
+        return $this;
+    }
+
+    /*
+     * 查询表达式参数处理函数
+     */
+    public function options_handle($param) {
+        if (is_numeric($param)) {
+            $option = $param;
+        } elseif (is_string($param) && !empty($param) && !is_numeric($param)) {
+            $params = explode(',', $param);
+            $option = implode(' and ', $params);
+        } elseif (is_array($param) && !empty($params)) {
+            $arr = array();
+
+            foreach ($param as $key => $value) {
+                $tip = "$key = $value";
+                array_push($arr, $tip);
+            }
+            $option = implode(' and ', $arr);
+        } else {
+            return false;
+        }
+        return $option;
+    }
+
+    /*
+     * 根据查询表达式查询数据
+     */
+    public function find($table = null) {
+        self::limit(1);
+        return self::select($table);
+    }
+
+    /*
+     * 根据查询表达式查询数据
+     */
+    public function select($table = null) {
+        if (isset($table)) {
+            $this->_table = $table;
+        }
+
+        $option = self::option();
+        $sql = 'select ' . $this->getField() .' from ' . $this->getTable() . ' ' . $this->_datas['join'] . ' ' . $option;
+        return $this->query($sql);
     }
 
     /*
@@ -306,6 +343,7 @@ abstract class Db
     public function data($data = array()) {
         $values = array();
         $fields = array();
+        $tip = 0;
         if (is_array($data) && isset($data)) {
             foreach ($data as $key => $value) {
                 if (is_array($value)) {
@@ -324,19 +362,19 @@ abstract class Db
             array_push($values, '(' . implode(',', array_values($data)) . ')');
             array_push($fields, '(' . implode(',', array_keys($data)) . ')');
         }
-        $this->data['fields'] = $fields[0];
-        $this->data['values'] = implode(',', $values);
+        $this->_datas['fields'] = $fields[0];
+        $this->_datas['values'] = implode(',', $values);
+        return $this;
     }
 
     /*
      * 数据新增
      */
     public function add() {
-        $fields = $this->data['fields'];
-        $values = $this->data['values'];
-        $sql = 'insert into ' . $this->_table . $fields . ' values' . $values;
-        $res = mysqli_query($this->_dbInstance, $sql);
-        return $res;
+        $fields = $this->_datas['fields'];
+        $values = $this->_datas['values'];
+        $sql = 'insert into ' . $this->getTable() . $fields . ' values' . $values;
+        return $this->query($sql);
     }
 
     /*
@@ -344,27 +382,49 @@ abstract class Db
      */
     public function save($data = null) {
         $tip = array();
+        $updates = '';
         if (is_array($data) && isset($data)) {
             foreach ($data as $key => $value) {
                 array_push($tip, "$key = $value");
             }
+            $updates = implode(',', $tip);
         } elseif (is_string($data) && false != strpos($data, '=')) {
-            $msg_set = $data;
+            $updates = $data;
         } else {
             return false;
         }
 
-        $msg_set = implode(',', $tip);
-        $sql = 'update ' . $this->_table . ' set ' . $msg_set . ' where ' . $this->options['where'];
-        $res = mysqli_query($this->_dbInstance, $sql);
-        return $res;
+        $sql = 'update ' . $this->getTable() . ' set ' . $updates . ' where ' . $this->_options['where'];
+        return $this->query($sql);
     }
 
     /*
      * 数据删除
      */
     public function delete() {
-        $sql = 'delete from ' . $this->_table . ' where ' . $this->options['where'];
+        $sql = "delete from " . $this->getTable() . ' where ' . $this->_options['where'];
+        return $this->query($sql);
+    }
+
+    /*
+     * 事务开始
+     */
+    public function startTrans() {
+        /* 子类实现 */
+    }
+
+    /*
+     * 事务提交
+     */
+    public function commitTrans() {
+        /* 子类实现 */
+    }
+
+    /*
+     * 事务回退
+     */
+    public function rollbackTrans() {
+        /* 子类实现 */
     }
 
     /*
@@ -387,12 +447,7 @@ abstract class Db
      * 关闭连接
      */
     public function close() {
-        $close = mysqli_close($this->_dbInstance);
-        if ($close) {
-            return true;
-        } else {
-            return false;
-        }
+        /* 子类实现 */
     }
 
     function __destruct() {

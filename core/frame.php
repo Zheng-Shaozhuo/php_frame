@@ -57,6 +57,7 @@ class frame
         } else{
             return false;
         }
+        return false;
     }
 
     public function assign($name, $value)

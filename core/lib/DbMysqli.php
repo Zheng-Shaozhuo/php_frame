@@ -63,6 +63,27 @@ class DbMysqli extends Db
     }
 
     /*
+     * 事务开始
+     */
+    public function startTrans() {
+        return mysqli_begin_transaction(self::$_dbInstance);
+    }
+
+    /*
+     * 事务提交
+     */
+    public function commitTrans() {
+        return mysqli_commit(self::$_dbInstance);
+    }
+
+    /*
+     * 事务回退
+     */
+    public function rollbackTrans() {
+        return mysqli_rollback(self::$_dbInstance);
+    }
+
+    /*
      * SQL查询
      */
     public function query($sql, $type = 'all', $resultmode = MYSQLI_STORE_RESULT) {
@@ -104,6 +125,25 @@ class DbMysqli extends Db
             $this->_error = 'query命令不合法, 为 [' . gettype($sql) . '] 类型, 请检查!';
         }
         return $res;
+    }
+
+    /*
+     * SQL执行
+     */
+    public function exec($sql) {
+        $flag = false;
+        if ($stmt = mysqli_prepare(self::$_dbInstance, $sql)) {
+            $flag = mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+        return $flag;
+    }
+
+    /*
+     * 关闭连接
+     */
+    public function close() {
+        return mysqli_close(self::$_dbInstance);
     }
 
 }
