@@ -84,13 +84,14 @@ abstract class Db
      */
     public function table($table) {
         $this->_table = $table;
+        return $this;
     }
 
     /*
      * 获取完整表名
      */
     private function getFullTable($table) {
-        return isset($this->_tableprefix) ? $table : $this->_tableprefix . '_' . $table;
+        return isset($this->_tableprefix) ? $this->_tableprefix . '_' . $table : $table;
     }
 
     /*
@@ -120,7 +121,7 @@ abstract class Db
     public function field($fields = '*') {
         $this->_fields = $fields;
     }
-    
+
     /*
      * 返回错误信息
      */
@@ -302,11 +303,11 @@ abstract class Db
         } elseif (is_string($param) && !empty($param) && !is_numeric($param)) {
             $params = explode(',', $param);
             $option = implode(' and ', $params);
-        } elseif (is_array($param) && !empty($params)) {
+        } elseif (is_array($param) && !empty($param)) {
             $arr = array();
 
             foreach ($param as $key => $value) {
-                $tip = "$key = $value";
+                $tip = "$key = '$value'";
                 array_push($arr, $tip);
             }
             $option = implode(' and ', $arr);
@@ -385,7 +386,7 @@ abstract class Db
         $updates = '';
         if (is_array($data) && isset($data)) {
             foreach ($data as $key => $value) {
-                array_push($tip, "$key = $value");
+                array_push($tip, "$key = '$value'");
             }
             $updates = implode(',', $tip);
         } elseif (is_string($data) && false != strpos($data, '=')) {
@@ -394,16 +395,16 @@ abstract class Db
             return false;
         }
 
-        $sql = 'update ' . $this->getTable() . ' set ' . $updates . ' where ' . $this->_options['where'];
-        return $this->query($sql);
+        $sql = 'update ' . $this->getTable() . ' set ' . $updates . ' where ' . $this->_options['where']; echo $sql;
+        return $this->exec($sql);
     }
 
     /*
      * 数据删除
      */
     public function delete() {
-        $sql = "delete from " . $this->getTable() . ' where ' . $this->_options['where'];
-        return $this->query($sql);
+        $sql = 'delete from ' . $this->getTable() . ' where ' . $this->_options['where'];
+        return $this->exec($sql);
     }
 
     /*
@@ -441,6 +442,7 @@ abstract class Db
      */
     public function exec($sql) {
         /* 子类实现 */
+        return null;
     }
 
     /*
