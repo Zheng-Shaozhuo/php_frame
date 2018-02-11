@@ -7,6 +7,8 @@
  */
 namespace core;
 
+use core\lib\String;
+
 class frame
 {
     public static $classMap = array();
@@ -14,7 +16,7 @@ class frame
     public static function init()
     {
         spl_autoload_register('self::func_autoload');
-        $route = new \core\lib\route();
+        $route = new \core\lib\Route();
 
         self::runAction($route->control, $route->action);
 
@@ -29,6 +31,8 @@ class frame
             $class = '\\' . MODULE . '\control\\' . $control . 'Controller';
             $obj = new $class();
 
+            $extension = String::getFileExtension($action);
+            $action = isset($extension) ? str_replace(".$extension", null, $action) : $action;
             $obj->$action();
         }
         else
@@ -58,20 +62,5 @@ class frame
             return false;
         }
         return false;
-    }
-
-    public function assign($name, $value)
-    {
-        $this->assign[$name] = $value;
-    }
-
-    public function display($file)
-    {
-        $path = ROOT . MODULE . '/view/' . $file . '.html';
-        if (is_file($path))
-        {
-            extract($this->assign);
-            include $path;
-        }
     }
 }
