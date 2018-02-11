@@ -37,6 +37,10 @@ class String
     }
 
     public static function getFileExtension($filename) {
-        return strtolower(end(explode('.', $filename)));
+        $params = explode('.', $filename);
+        if (count($params) == 2) {
+            return strtolower(end($params));
+        }
+        return null;
     }
 }
