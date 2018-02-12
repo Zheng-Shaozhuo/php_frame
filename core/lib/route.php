@@ -14,42 +14,46 @@ class route
     public function __construct()
     {
         $uri = $_SERVER['REQUEST_URI'];
-        $uri = trim(str_replace('/index.php', null, $uri), '/');
-        $params = explode('/', $uri);
+        if (strpos(strtolower($uri), 'index.php') > 0) {
+            $uri = trim(str_replace('/index.php', null, $uri), '/');
+            $params = explode('/', $uri);
 
-        if (is_null($uri) || '' == $uri)
-        {
-            $this->control = 'index';
-            $this->action = 'index';
-        }
-        else if (isset($params[0]))
-        {
-            $this->control = $params[0];
-            unset($params[0]);
-            if (isset($params[1]))
+            if (is_null($uri) || '' == $uri)
             {
-                $this->action = $params[1];
-                unset($params[1]);
-            }
-            else
-            {
+                $this->control = 'index';
                 $this->action = 'index';
             }
-
-            $count = count($params);
-            $i = 2;
-            while ($i < $count)
+            else if (isset($params[0]))
             {
-                if (isset($params[$i + 1]))
+                $this->control = $params[0];
+                unset($params[0]);
+                if (isset($params[1]))
                 {
-                    $_GET[$params[$i++]] = $params[$i++];
+                    $this->action = $params[1];
+                    unset($params[1]);
                 }
                 else
                 {
-                    break;
+                    $this->action = 'index';
+                }
+
+                $count = count($params);
+                $i = 2;
+                while ($i < $count)
+                {
+                    if (isset($params[$i + 1]))
+                    {
+                        $_GET[$params[$i++]] = $params[$i++];
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
+        } else {
+            $this->control = 'index';
+            $this->action = 'index';
         }
-
     }
 }
