@@ -17,8 +17,10 @@
     <link rel="stylesheet" type="text/css" href="<?php echo ASSETS;?>/assets/lib/css/dataTables.bootstrap.css">
     <link rel="stylesheet" type="text/css" href="<?php echo ASSETS;?>/assets/lib/css/select2.min.css">
     <!-- CSS App -->
+    <link rel="stylesheet" type="text/css" href="<?php echo ASSETS;?>/assets/plugins/wangEditor/css/wangEditor.min.css">
     <link rel="stylesheet" type="text/css" href="<?php echo ASSETS;?>/assets/css/style.css">
     <link rel="stylesheet" type="text/css" href="<?php echo ASSETS;?>/assets/css/themes/flat-blue.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo ASSETS;?>/assets/plugins/jeDate/jedate.css">
 </head>
 
 <body class="flat-blue">
@@ -166,28 +168,59 @@
                 <div class="page-title">
                 </div>
                 <div class="row">
-                    <div class="col-xs-12">
-                        <form action="" method="post">
+                    <form action="add_blog.html" method="post">
+                        <div class="col-xs-9">
                             <div class="form-group">
-                                <input type="text" class="form-control" placeholder="文章标题">
-                            </div>
-                            <div class="form-group" id="editor">
+                                <input type="text" class="form-control" name="title" required placeholder="文章标题">
                             </div>
                             <div class="form-group">
-                                <input type="text" class="form-control" placeholder="文章标签, 使用英文逗号分隔">
+                                <textarea class="xtl-editor-content" id="content" name="content" placeholder="请输入内容"></textarea>
                             </div>
                             <div class="form-group">
-                                <select class="form-control">
-                                    <option>1</option>
-                                    <option>2</option>
-                                    <option>3</option>
-                                    <option>4</option>
-                                    <option>5</option>
+                                <input type="text" class="form-control" name="tag" required placeholder="文章标签, 使用英文逗号分隔">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" class="form-control" name="alias" required placeholder="文章别名">
+                            </div>
+
+                            <button type="submit" class="btn btn-success">博客提交</button>
+                        </div>
+                        <div class="col-xs-3">
+                            <div class="form-group">
+                                <label class="control-label" for="classify">文章分类</label>
+                                <select class="form-control" required id="classify" name="classify">
+                                    <option value="">请选择</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
                                 </select>
                             </div>
-                            <button type="button" class="btn btn-success">博客提交</button>
-                        </form>
-                    </div>
+                            <div class="form-group">
+                                <label class="control-label" for="status">文章状态</label>
+                                <select class="form-control" id="status" name="status" required>
+                                    <option value="11">公开</option>
+                                    <option value="22">草稿</option>
+                                    <option value="88">审核</option>
+                                    <option value="99">禁止</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label" for="author">文章作者</label>
+                                <input type="text" class="form-control" name="author" id="author" required placeholder="文章作者">
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label" for="blog_time">文章日期</label>
+                                <input type="text" id="blog_time" name="time" class="jeinput form-control" placeholder="文章日期">
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label" for="isTop">文章置顶</label>
+                                <input type="checkbox" class="toggle-checkbox" id="isTop" name="isTop" checked>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label" for="isComment">文章评论</label>
+                                <input type="checkbox" class="toggle-checkbox" id="isComment" name="isComment" checked>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -210,17 +243,32 @@
         <script type="text/javascript" src="<?php echo ASSETS;?>/assets/lib/js/ace/ace.js"></script>
         <script type="text/javascript" src="<?php echo ASSETS;?>/assets/lib/js/ace/mode-html.js"></script>
         <script type="text/javascript" src="<?php echo ASSETS;?>/assets/lib/js/ace/theme-github.js"></script>
+
+        <script type="text/javascript" src="<?php echo ASSETS;?>/assets/plugins/jeDate/jquery.jedate.min.js"></script>
+        <script type="text/javascript" src="<?php echo ASSETS;?>/assets/plugins/wangEditor/js/wangEditor.min.js"></script>
         <!-- Javascript -->
         <script type="text/javascript" src="<?php echo ASSETS;?>/assets/js/app.js"></script>
         <script type="text/javascript" src="<?php echo ASSETS;?>/assets/js/index.js"></script>
-        <script type="text/javascript" src="https://unpkg.com/wangeditor@3.0.15/release/wangEditor.min.js"></script>
 
         <script type="text/javascript">
-            var E = window.wangEditor
-            var editor = new E('#editor')
-            editor.customConfig.uploadImgShowBase64 = true;   // 使用 base64 保存图片
-            // 或者 var editor = new E( document.getElementById('editor') )
-            editor.create()
+//            var E = window.wangEditor;
+//            var editor = new E('#content');
+//            editor.customConfig.uploadImgShowBase64 = true;   // 使用 base64 保存图片
+//            // 或者 var editor = new E( document.getElementById('editor') )
+//            editor.create()
+
+            var E = window.wangEditor;
+            var editor = new E('content');
+//            editor.customConfig.uploadImgShowBase64 = true;   // 使用 base64 保存图片
+            editor.create();
+        </script>
+
+        <script>
+            $(function () {
+                $("#blog_time").jeDate({
+                    format: "YYYY-MM-DD hh:mm:ss"
+                });
+            });
         </script>
     </div>
 </div>
