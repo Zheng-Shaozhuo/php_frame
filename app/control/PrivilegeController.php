@@ -20,7 +20,7 @@ class PrivilegeController extends Controller
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $usr = $_POST['usrname'];
             $pass = $_POST['usrpass'];
-            $is_remind = $_POST['remind'];
+            $is_remind = empty($_POST['remind']) ? null : $_POST['remind'];
 
             $db = new DbMysqli();
             $res = $db->where(array('user' => $usr, 'pass' => md5(md5($pass))))->find('admin');
