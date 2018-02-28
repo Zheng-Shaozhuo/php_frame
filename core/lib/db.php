@@ -44,7 +44,7 @@ abstract class Db
     public function __construct($host = null, $user = null, $pass = null, $dbname = null, $port = 3306, $charset = 'uft8', $prefix = '') {
         if (!isset(self::$_dbInstance)) {
             if (!isset($host) || !isset($user) || !isset($pass) || !isset($dbname)) {
-                $config = Config::RC('db', true);
+                $config = Config::RC('db', false);
                 $this->_charset     = $config['charset'];
                 $this->_host        = $config['hostname'];
                 $this->_user        = $config['username'];
@@ -395,7 +395,7 @@ abstract class Db
             return false;
         }
 
-        $sql = 'update ' . $this->getTable() . ' set ' . $updates . ' where ' . $this->_options['where']; echo $sql;
+        $sql = 'update ' . $this->getTable() . ' set ' . $updates . ' where ' . $this->_options['where'];
         return $this->exec($sql);
     }
 
