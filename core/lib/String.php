@@ -38,8 +38,24 @@ class String
 
     public static function getFileExtension($filename) {
         $params = explode('.', $filename);
-        if (count($params) == 2) {
+        if (2 == count($params)) {
             return strtolower(end($params));
+        }
+        return null;
+    }
+
+    public static function getFileNameRemoveExtension($filename) {
+        $params = explode('.', $filename);
+        if (2 == count($params)) {
+            return strtolower(reset($params));
+        }
+        return null;
+    }
+
+    public static function getRewriteValue($param) {
+        $params = explode('.', $param);
+        if (2 == count($params)) {
+            return substr(strtolower(reset($params)), 1);
         }
         return null;
     }
