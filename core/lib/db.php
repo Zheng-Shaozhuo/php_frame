@@ -120,6 +120,7 @@ abstract class Db
      */
     public function field($fields = '*') {
         $this->_fields = $fields;
+        return $this;
     }
 
     /*
@@ -275,22 +276,30 @@ abstract class Db
     /*
      * 表达式查询order处理函数
      */
-    public function join($table, $on = array(), $type = 'left') {
-        $join_table = 'vg_' . $this->getFullTable($table);
-        $_full_table = $this->getFullTable($this->_table);
+    public function join($table, $on = null, $type = 'left') {
+        $join_table = $this->getFullTable($table);
+        $alias_join_table = 'vg_' . $join_table;
+        $master_table = $this->getFullTable($this->_table);
+        $alias_master_table = 'vg_' . $master_table;
         if (is_array($on)) {
             $arrOn = array();
             foreach ($on as $k => $v) {
-                array_push($arrOn, $_full_table . ".$k = $join_table.$v");
+                array_push($arrOn, $alias_master_table . ".$k = $alias_join_table.$v");
             }
             $ons = implode(' and ', $arrOn);
         } elseif (is_string($on)) {
-            $ons = $on;
+            if (2 == substr_count($on, 'vg_')) {
+                $ons = $on;
+            } elseif (2 == count($params = explode('=', $on))) {
+                $ons = 'vg_' . $this->getFullTable(trim($params[0])) . ' = ' . 'vg_' . $this->getFullTable(trim($params[1]));
+            } else {
+                $ons = '1 = 1';
+            }
         } else {
             $ons = '1 = 1';
         }
-        $joins = "$type $join_table on $ons";
-        $this->_datas['join'] = isset($this->_datas['join']) ? $this->_datas['join'] . " $joins" : $_full_table . " $joins";
+        $joins = "$type join $join_table $alias_join_table on $ons";
+        $this->_datas['join'] = isset($this->_datas['join']) ? $this->_datas['join'] . " $joins" : $alias_master_table . " $joins";
         return $this;
     }
 
