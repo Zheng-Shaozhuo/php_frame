@@ -20,7 +20,7 @@ class BaseController extends Controller
         if (isset($_SESSION['usr']) && $_SESSION['usr_login_time'] + 3600 * 24 >= time()) {
 
         } else {
-            $this->redirect("index.php/Privilege/login");
+            $this->redirect("login.html");
         }
     }
 }

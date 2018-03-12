@@ -53,7 +53,7 @@ class route
                     }
                 }
             }
-        } elseif ('/index.php' . $_SERVER['REQUEST_URI'] == $_SERVER['PHP_SELF']) {
+        } elseif (!strncasecmp('/index.php' . $_SERVER['REQUEST_URI'], $_SERVER['PHP_SELF'], strlen($_SERVER['PHP_SELF'])) && '/index.php' != $_SERVER['PHP_SELF']) {
             $routes = Config::RC('route', true);
             $target = $_SERVER['REQUEST_URI'];
             $res = $this->getRewriteParam($routes, $target);

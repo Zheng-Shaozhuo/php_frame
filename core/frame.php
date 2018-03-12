@@ -24,6 +24,7 @@ class frame
 
     public static function runAction($control, $action)
     {
+        $control = ucfirst(strtolower($control));
         $path = str_replace('\\', DIRECTORY_SEPARATOR, ROOT . '/' . MODULE . '/control/' . $control . 'Controller.php');
         if (is_file($path))
         {

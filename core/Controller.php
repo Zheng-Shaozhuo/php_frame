@@ -37,4 +37,43 @@ class Controller
     protected function redirect($url) {
         header('Location:' . HU . '/' . $url);
     }
+
+    protected function post($name = '', $default = null, $filter = '') {
+        $_post = $_POST;
+
+        return empty($_post[$name]) ? $default : $_post[$name];
+    }
+
+    protected function get($name = '', $default = null, $filter = '') {
+        $_get = $_GET;
+
+        return empty($_get[$name]) ? $default : $_get[$name];
+    }
+
+    protected function input($key = '', $default = null, $filter = '') {
+        if (0 === strpos($key, '?')) {
+            $key = substr($key, 1);
+            $has = true;
+        }
+
+        if ($pos = strpos($key, '.')) {
+            // 指定参数来源
+            list($method, $key) = explode('.', $key, 2);
+            if (!in_array($method, ['get', 'post', 'put', 'patch', 'delete', 'route', 'param', 'request', 'session', 'cookie', 'server', 'env', 'path', 'file'])) {
+                $key    = $method . '.' . $key;
+                $method = 'param';
+            }
+        } else {
+            // 默认为自动判断
+            $method = 'param';
+        }
+    }
+
+    protected function showMsg($url, $msg = '操作成功', $isSuccess = true) {
+
+    }
+
+    protected function goBackMsg($msg) {
+
+    }
 }

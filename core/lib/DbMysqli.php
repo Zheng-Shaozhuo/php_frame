@@ -113,7 +113,11 @@ class DbMysqli extends Db
                     $res = array();
                 }
 
-                mysqli_free_result($querys);
+                $mysqli_result_codes = array('select', 'show', 'describe', 'desc', 'explain');
+                $sql_type = strtolower(explode(' ', $sql)[0]);
+                if (in_array($sql_type, $mysqli_result_codes)) {
+                    mysqli_free_result($querys);
+                }
             } else {
                 $this->_errno = mysqli_errno(self::$_dbInstance);
                 $this->_error = mysqli_error(self::$_dbInstance);

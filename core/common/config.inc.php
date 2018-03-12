@@ -25,12 +25,11 @@ class Config{
     public static function RC($name, $isModule = false) {
         if ($isModule) {
             $path = MODULE . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . "$name.config.php";
-            if (is_file($path)) {
-                return include_once $path;
-            }
+        } else {
+            $path = 'config' . DIRECTORY_SEPARATOR . "$name.config.php";
         }
 
-        $path = ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . "$name.config.php";
+        $path = ROOT . DIRECTORY_SEPARATOR . $path;
         if (is_file($path)) {
             return include_once $path;
         } else {

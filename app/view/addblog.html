@@ -167,56 +167,64 @@
                 <div class="page-title">
                 </div>
                 <div class="row">
-                    <form action="add_blog.html" method="post">
+                    <form action="<?php echo empty($blog) ? 'add_blog' : 'update_blog';?>.html" method="post">
                         <div class="col-xs-9">
                             <div class="form-group">
-                                <input type="text" class="form-control" name="title" required placeholder="文章标题">
+                                <input type="text" class="form-control" name="title" required placeholder="文章标题"
+                                       value="<?php echo empty($blog['title']) ? '' : $blog['title'];?>">
                             </div>
                             <div class="form-group">
-                                <input type="text" class="form-control" name="alias" required placeholder="文章别名">
+                                <input type="text" class="form-control" name="alias" required placeholder="文章别名"
+                                       value="<?php echo empty($blog['alias']) ? '' : $blog['alias'];?>">
                             </div>
                             <div class="form-group" id="wangEditorBox" >
                             </div>
                             <div class="form-group">
-                                <input type="text" class="form-control" name="tag" required placeholder="文章标签, 使用英文逗号分隔">
+                                <input type="text" class="form-control" name="tag" required placeholder="文章标签, 使用英文逗号分隔"
+                                       value="<?php echo empty($blog['tags']) ? '' : $blog['tags'];?>">
                             </div>
 
+                            <input type="hidden" name="ubid" value="<?php echo empty($blog['bid']) ? 0 : $blog['bid'];?>" />
                             <input type="hidden" id="content" name="content" />
-                            <button type="submit" class="btn btn-success">博客提交</button>
+                            <button type="submit" class="btn btn-success">博客<?php echo empty($blog) ? '提交' : '更新';?></button>
                         </div>
                         <div class="col-xs-3">
                             <div class="form-group">
                                 <label class="control-label" for="classify">文章分类</label>
                                 <select class="form-control" required id="classify" name="classify">
                                     <option value="">请选择</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
+                                    <option value="2" selected="<?php echo empty($blog['bid']) ? '' : 'selected';?>">2</option>
+                                    <option value="3" selected="<?php echo empty($blog['bid']) ? '' : 'selected';?>">3</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="control-label" for="status">文章状态</label>
                                 <select class="form-control" id="status" name="status" required>
-                                    <option value="11">公开</option>
-                                    <option value="22">草稿</option>
-                                    <option value="88">审核</option>
-                                    <option value="99">禁止</option>
+                                    <option value="11" <?php echo (!empty($blog['status']) && $blog['status'] == 11) ? 'selected' : '';?>>公开</option>
+                                    <option value="22" <?php echo (!empty($blog['status']) && $blog['status'] == 22) ? 'selected' : '';?>>草稿</option>
+                                    <option value="88" <?php echo (!empty($blog['status']) && $blog['status'] == 88) ? 'selected' : '';?>>审核</option>
+                                    <option value="99" <?php echo (!empty($blog['status']) && $blog['status'] == 99) ? 'selected' : '';?>>禁止</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="control-label" for="author">文章作者</label>
-                                <input type="text" class="form-control" name="author" id="author" required placeholder="文章作者">
+                                <input type="text" class="form-control" name="author" id="author" required placeholder="文章作者"
+                                       value="<?php echo empty($blog['author']) ? '' : $blog['author'];?>">
                             </div>
                             <div class="form-group">
                                 <label class="control-label" for="blog_time">文章日期</label>
-                                <input type="text" id="blog_time" name="time" class="jeinput form-control" placeholder="文章日期">
+                                <input type="text" id="blog_time" name="time" class="jeinput form-control" placeholder="文章日期"
+                                       value="<?php echo empty($blog['createAt']) ? '' : date('Y-m-d H:i:s', $blog['createAt']);?>">
                             </div>
                             <div class="form-group">
                                 <label class="control-label" for="isTop">文章置顶</label>
-                                <input type="checkbox" class="toggle-checkbox" id="isTop" name="isTop" checked>
+                                <input type="checkbox" class="toggle-checkbox" id="isTop" name="isTop"
+                                    <?php echo (!empty($blog['isTop']) && $blog['isTop'] == 1) ? 'checked' : '';?>>
                             </div>
                             <div class="form-group">
                                 <label class="control-label" for="isComment">文章评论</label>
-                                <input type="checkbox" class="toggle-checkbox" id="isComment" name="isComment" checked>
+                                <input type="checkbox" class="toggle-checkbox" id="isComment" name="isComment"
+                                    <?php echo (!empty($blog['isComment']) && $blog['isComment'] == 1) ? 'checked' : '';?>>
                             </div>
                         </div>
                     </form>
@@ -258,6 +266,7 @@
                 text.val(html);
             };
             editor.create();
+            editor.txt.html('<?php echo empty($blog["content"]) ? "" : htmlspecialchars_decode($blog["content"]);?>');
             text.val(editor.txt.html());
         </script>
 

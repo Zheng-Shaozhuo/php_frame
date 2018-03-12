@@ -112,7 +112,22 @@ abstract class Db
      * 获取查询字段
      */
     public function getField() {
-        return isset($this->_fields) ? $this->_fields : '*';
+        if (empty($this->_datas['join'])) {
+            return isset($this->_fields) ? $this->_fields : '*';
+        } else {
+            $fields = '*';
+            if (isset($this->_fields)) {
+                $params = explode(',', $this->_fields);
+                $fields = implode(',', array_map(function($v) {
+                    $tps = explode('.', trim($v));
+                    if (2 == count($tps)) {
+                        return 'vg_' . $this->getFullTable($tps[0]) . '.' . $tps[1];
+                    }
+                    return $v;
+                }, $params));
+            }
+            return $fields;
+        }
     }
 
     /*
@@ -331,7 +346,7 @@ abstract class Db
      */
     public function find($table = null) {
         self::limit(1);
-        return self::select($table);
+        return self::select($table)[0];
     }
 
     /*
@@ -395,7 +410,7 @@ abstract class Db
         $updates = '';
         if (is_array($data) && isset($data)) {
             foreach ($data as $key => $value) {
-                array_push($tip, "$key = '$value'");
+                array_push($tip, "$key = $value");
             }
             $updates = implode(',', $tip);
         } elseif (is_string($data) && false != strpos($data, '=')) {

@@ -28,7 +28,7 @@ class PrivilegeController extends Controller
                 $_SESSION['usr'] = $usr;
                 $_SESSION['usr_login_time'] = time();
 
-                $this->redirect("index.php/Index/index");
+                $this->redirect("index.html");
             } else {
                 $this->display('login');
             }
